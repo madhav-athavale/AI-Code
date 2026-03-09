@@ -1,26 +1,43 @@
 """
-MCP SSE Client - Agentic AI Template
-Connects to a running MCP SSE server over HTTP.
+MCP StreamableHTTP Client - Agentic AI Template
+Connects to the StreamableHTTP server via single /mcp endpoint.
 
 Install dependencies:
-    pip install "mcp[client]" anthropic httpx-sse
+    pip install "mcp[client]" anthropic python-dotenv
+
+Changes from SSE version:
+    SSE:  from mcp.client.sse import sse_client
+          async with sse_client(url) as (read, write):
+
+    HTTP: from mcp.client.streamable_http import streamablehttp_client
+          async with streamablehttp_client(url) as (read, write, _):
+          NOTE: returns 3 values — third (_) is get_session_id callable, safe to ignore
 
 Usage:
-    python mcp_sse_client.py
+    python mcp_http_client.py
 """
 
 import asyncio
-import os
-from mcp.client.sse import sse_client
+from mcp.client.streamable_http import streamablehttp_client
 from mcp import ClientSession
 import anthropic
-
 from dotenv import load_dotenv
 
 load_dotenv()
+
 # ── Config ─────────────────────────────────────────────────────────────────────
-SERVER_URL = "http://localhost:8000/sse"   # Update if server is on another machine
+SERVER_URL = "http://localhost:8000/mcp"   # single endpoint
 MODEL      = "claude-sonnet-4-6"
+
+SYSTEM = (
+    "You are a helpful data assistant with access to tools for math, "
+    "stock prices, and a MySQL database. "
+    "When the user asks to save, export, or write results to CSV, "
+    "use the write_csv tool. For database query results, extract the "
+    "column names as headers and each row's values as CSV rows. "
+    "For stock price results, use headers like ['Ticker', 'Price'] and "
+    "one row per stock. Always confirm the file was written."
+)
 
 
 # ── Convert MCP tools → Anthropic format ──────────────────────────────────────
@@ -37,7 +54,8 @@ def mcp_tools_to_anthropic(mcp_tools):
 
 # ── Agentic loop ───────────────────────────────────────────────────────────────
 async def run_agent(user_message: str):
-    async with sse_client(SERVER_URL) as (read, write):
+    # Returns (read, write, get_session_id) — third value ignored with _
+    async with streamablehttp_client(SERVER_URL) as (read, write, _):
         async with ClientSession(read, write) as session:
             await session.initialize()
 
@@ -45,16 +63,6 @@ async def run_agent(user_message: str):
             tools     = mcp_tools_to_anthropic(mcp_tools)
             client    = anthropic.Anthropic()
             messages  = [{"role": "user", "content": user_message}]
-
-            SYSTEM = (
-                "You are a helpful data assistant with access to tools for math, "
-                "stock prices, and a MySQL database. "
-                "When the user asks to save, export, or write results to CSV, "
-                "use the write_csv tool. For database query results, extract the "
-                "column names as headers and each row's values as CSV rows. "
-                "For stock price results, use headers like ['Ticker', 'Price'] and "
-                "one row per stock. Always confirm the file was written."
-            )
 
             print(f"\n{'='*50}")
             print(f"User: {user_message}")

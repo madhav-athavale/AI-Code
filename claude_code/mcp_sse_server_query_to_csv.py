@@ -11,6 +11,7 @@ import uvicorn
 import httpx
 import aiomysql
 import csv
+import json
 import os as _os
 from mcp.server import Server
 from mcp.server.sse import SseServerTransport
@@ -157,8 +158,18 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         price = quote.get("05. price", "")
 
         if not price:
-            return [TextContent(type="text", text=f"Could not get price. API response: {data}")]
-        return [TextContent(type="text", text=f"The current price of {symbol} is ${float(price):.2f}")]
+            return [TextContent(type="text", text=json.dumps({"error": f"Could not get price for {symbol}", "raw": data}))]
+        payload = {
+            "ticker": symbol,
+            "price":  round(float(price), 2),
+            "open":   round(float(quote.get("02. open", 0)), 2),
+            "high":   round(float(quote.get("03. high", 0)), 2),
+            "low":    round(float(quote.get("04. low",  0)), 2),
+            "volume": quote.get("06. volume", ""),
+            "change": quote.get("09. change", ""),
+            "change_pct": quote.get("10. change percent", ""),
+        }
+        return [TextContent(type="text", text=json.dumps(payload))]
 
     elif name == "query_db":
         query = arguments["query"]
@@ -169,9 +180,12 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         conn.close()
 
         if not rows:
-            return [TextContent(type="text", text="Query returned no results.")]
-        result = "\n".join(str(row) for row in rows)
-        return [TextContent(type="text", text=f"Query results:\n{result}")]
+            return [TextContent(type="text", text=json.dumps({"headers": [], "rows": [], "count": 0}))]
+
+        headers     = list(rows[0].keys())
+        data_rows   = [[str(v) for v in row.values()] for row in rows]
+        structured  = {"headers": headers, "rows": data_rows, "count": len(data_rows)}
+        return [TextContent(type="text", text=json.dumps(structured))]
 
     elif name == "write_csv":
         filename = arguments["filename"]
