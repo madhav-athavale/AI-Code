@@ -1,5 +1,5 @@
 """
-Option 3 - Inject a pandas DataFrame into the Claude agent prompt.
+From Claude
 Claude reads the data and decides how to call write_csv.
 
 Install dependencies:

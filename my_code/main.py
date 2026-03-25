@@ -1,3 +1,5 @@
+# Simple MCP server
+
 from fastapi import FastAPI
 import uvicorn
 from pydantic import BaseModel,Field

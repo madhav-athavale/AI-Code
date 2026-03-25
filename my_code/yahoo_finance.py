@@ -1,5 +1,14 @@
+# Sample code to get stock price using Alpha Vantage.
+
 import yfinance as yf
 import requests
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+AV_API_KEY = os.getenv("ALPHAVANTAGE_API_KEY")
+
 msft = yf.Ticker('MSFT')
 
 
@@ -12,7 +21,7 @@ url = "https://www.alphavantage.co/query"
 params = {
     "function": "GLOBAL_QUOTE",
     "symbol": symbol,
-    "apikey": "A6QAMSHO0IPIOIR0"
+    "apikey": AV_API_KEY
 }
 
 response = requests.get(url, params=params)

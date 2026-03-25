@@ -1,3 +1,4 @@
+# Simple MCP server
 from fastapi import FastAPI
 import uvicorn
 from fastapi_mcp import FastApiMCP

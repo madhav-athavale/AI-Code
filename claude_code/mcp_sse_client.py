@@ -1,4 +1,5 @@
 """
+From Claude
 MCP SSE Client - Agentic AI Template
 Connects to a running MCP SSE server over HTTP.
 

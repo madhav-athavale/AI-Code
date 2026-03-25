@@ -1,4 +1,5 @@
 """
+Fom Claude
 MCP StreamableHTTP Client - Agentic AI Template
 Connects to the StreamableHTTP server via single /mcp endpoint.
 

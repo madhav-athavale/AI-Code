@@ -1,4 +1,5 @@
 """
+From Claude
 MCP SSE Server - Agentic AI Template
 Runs as a standalone HTTP server supporting multiple clients.
 Tools: add, subtract, price (Alpha Vantage), query_db (MySQL)

@@ -1,9 +1,5 @@
 """
-Option 2 - Call write_csv tool directly with a pandas DataFrame.
-Bypasses Claude entirely — sends data straight to the MCP server.
-
-Install dependencies:
-    pip install "mcp[client]" httpx-sse pandas
+How to call the tool directly, bypassing Claude
 
 Usage:
     python direct_tool_call.py

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <div id="g_id_onload"
+         data-client_id="28175064248-pban8qbs4g61ohdgcs07ee5s3vt2coag.apps.googleusercontent.com"
+         data-callback="handleResponse">
+    </div>
+    <div class="g_id_signin" data-type="standard"></div>
+
+    <script>
+        function handleResponse(response) {
+            console.log("Encoded JWT ID token: " + response.credential);
+            alert("Login successful! Check console for token.");
+        }
+    </script>
+</body>
+</html>

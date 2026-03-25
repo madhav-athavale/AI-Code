@@ -1,15 +1,15 @@
 """
-From Claude
 MCP StreamableHTTP Server - Agentic AI Template
 Single /mcp endpoint handles everything.
-Tools: add, subtract, price (Alpha Vantage), query_db (MySQL), write_csv
+Tools: add, subtract, price (Alpha Vantage), query_db (MySQL), write_csv, web_search (Brave)
 
 Install dependencies:
-    pip install "mcp[server]" httpx aiomysql python-dotenv
+    pip install fastmcp uvicorn httpx aiomysql python-dotenv
 
-Changes from SSE version:
-    SSE:  from mcp.server import Server + SseServerTransport + Starlette wiring
-    HTTP: from mcp.server.fastmcp import FastMCP + mcp.run(transport="streamable-http")
+Get a free Brave Search API key at:
+    https://api.search.brave.com/register
+Then add to your .env:
+    BRAVE_API_KEY=your_key_here
 """
 
 import csv
@@ -19,14 +19,14 @@ import httpx
 import aiomysql
 import uvicorn
 
-
 from fastmcp import FastMCP
 from dotenv import load_dotenv
 
 load_dotenv()
 
 # ── Config ─────────────────────────────────────────────────────────────────────
-AV_API_KEY = os.getenv("ALPHAVANTAGE_API_KEY")
+AV_API_KEY   = os.getenv("ALPHAVANTAGE_API_KEY")
+BRAVE_API_KEY = os.getenv("BRAVE_API_KEY")
 
 DB_CONFIG = {
     "host":     os.getenv("DB_HOST", "localhost"),
@@ -119,9 +119,70 @@ def write_csv(filename: str, headers: list[str], rows: list[list[str]]) -> str:
     return f"CSV written: {filepath} ({len(rows)} rows, {len(headers)} columns)"
 
 
+@mcp.tool()
+async def web_search(query: str, count: int = 5) -> str:
+    """
+    Search the web using Brave Search API.
+    Returns top results with title, url, and description.
+
+    query: search terms e.g. 'Python FastMCP tutorial'
+    count: number of results to return (1-10, default 5)
+    """
+    if not BRAVE_API_KEY:
+        return json.dumps({"error": "BRAVE_API_KEY not set in .env"})
+
+    count = max(1, min(count, 10))  # clamp between 1 and 10
+
+    headers = {
+        "Accept":              "application/json",
+        "Accept-Encoding":     "gzip",
+        "X-Subscription-Token": BRAVE_API_KEY,
+    }
+    params = {
+        "q":     query,
+        "count": count,
+    }
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            "https://api.search.brave.com/res/v1/web/search",
+            headers=headers,
+            params=params,
+        )
+
+    if response.status_code != 200:
+        return json.dumps({
+            "error":  f"Brave API returned {response.status_code}",
+            "detail": response.text,
+        })
+
+    data    = response.json()
+    results = data.get("web", {}).get("results", [])
+
+    if not results:
+        return json.dumps({"query": query, "results": [], "count": 0})
+
+    # Return clean structured results — title, url, description only
+    cleaned = [
+        {
+            "title":       r.get("title", ""),
+            "url":         r.get("url", ""),
+            "description": r.get("description", ""),
+        }
+        for r in results
+    ]
+
+    return json.dumps({
+        "query":   query,
+        "count":   len(cleaned),
+        "results": cleaned,
+    }, indent=2)
+
+
 # ── Entry point ────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
+    app = mcp.http_app()
     print("Starting MCP StreamableHTTP Server on http://0.0.0.0:8000")
     print("Endpoint: http://localhost:8000/mcp")
-    app = mcp.http_app()
+    print("Tools:    add, subtract, price, query_db, write_csv, web_search")
     uvicorn.run(app, host="0.0.0.0", port=8000)

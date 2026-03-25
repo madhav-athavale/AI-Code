@@ -1,3 +1,4 @@
+# Basic MCP Server
 from fastmcp import FastMCP
 
 # 1. Initialize the Server
