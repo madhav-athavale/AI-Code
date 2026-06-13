@@ -43,7 +43,7 @@ async def run_agent_with_df(df: pd.DataFrame, filename: str, instructions: str =
         filename:     Where to save the CSV
         instructions: Optional extra instruction for Claude
     """
-    # Serialize the DataFrame so Claude can read it
+    # Serialize DataFrame as JSON for Claude to understand and manipulate
     data_json = df.to_json(orient="records", indent=2)
     columns   = df.columns.tolist()
 

@@ -59,7 +59,7 @@ def tool_badge(name: str) -> str:
     return f'<span style="background:{color};color:white;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;">{name}</span>'
 
 
-# ── Agentic loop — yields steps as they happen ────────────────────────────────
+# Async generator for streaming agent progress to UI
 async def run_agent(user_message: str):
     """
     Async generator that yields step dicts as the agent runs.
@@ -93,6 +93,7 @@ async def run_agent(user_message: str):
                     yield {"type": "final", "text": final_text}
                     break
 
+                # Yield each step for live UI updates
                 tool_results = []
                 for tool_use in tool_uses:
                     yield {"type": "tool_call", "name": tool_use.name, "input": tool_use.input}

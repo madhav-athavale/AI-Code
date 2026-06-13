@@ -18,7 +18,7 @@ SERVER_SCRIPT = "/Users/madhavathavale/workspace/MacMiniM2/claude_code/mcp_serve
 MODEL = "claude-sonnet-4-6"      # Claude model to use
 
 
-# ── Convert MCP tools → Anthropic tool format ──────────────────────────────────
+# MCP and Anthropic use slightly different tool schema formats
 def mcp_tools_to_anthropic(mcp_tools):
     return [
         {
@@ -51,7 +51,7 @@ async def run_agent(user_message: str):
             print(f"User: {user_message}")
             print(f"{'='*50}")
 
-            # Agentic loop — keeps running until Claude stops calling tools
+            # Agentic loop: Claude → tool_use → MCP server → tool_result → Claude (repeat until done)
             while True:
                 response = client.messages.create(
                     model=MODEL,
@@ -60,10 +60,8 @@ async def run_agent(user_message: str):
                     messages=messages,
                 )
 
-                # Collect assistant message
                 messages.append({"role": "assistant", "content": response.content})
 
-                # Check if Claude wants to call a tool
                 tool_uses = [b for b in response.content if b.type == "tool_use"]
 
                 if not tool_uses:
@@ -79,7 +77,6 @@ async def run_agent(user_message: str):
                     print(f"\n[Tool call] {tool_use.name}({tool_use.input})")
                     result = await session.call_tool(tool_use.name, tool_use.input)
 
-                    # Flatten result content to a string
                     result_text = " ".join(
                         c.text for c in result.content if hasattr(c, "text")
                     )
@@ -91,7 +88,7 @@ async def run_agent(user_message: str):
                         "content": result_text,
                     })
 
-                # Feed tool results back to Claude
+                # Feed tool results back to Claude as next user message
                 messages.append({"role": "user", "content": tool_results})
 
 

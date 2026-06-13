@@ -40,7 +40,7 @@ def mcp_tools_to_anthropic(mcp_tools):
     ]
 
 
-# ── Step 1: Use Claude to run query_db and get structured JSON back ────────────
+# Step 1: Use Claude only for NL→SQL translation
 async def fetch_query_results(session: ClientSession, natural_language_query: str) -> dict:
     """
     Ask Claude to interpret a natural language query and call query_db.
@@ -96,7 +96,7 @@ async def fetch_query_results(session: ClientSession, natural_language_query: st
     raise RuntimeError("Claude did not call query_db for the given query.")
 
 
-# ── Step 1 (alt): Direct price fetch for one or more tickers ──────────────────
+# Fetch stock prices without Claude (deterministic operation)
 async def fetch_stock_prices(session: ClientSession, tickers: list[str]) -> dict:
     """
     Directly call the price tool for each ticker (no Claude needed).
@@ -120,7 +120,7 @@ async def fetch_stock_prices(session: ClientSession, tickers: list[str]) -> dict
     return {"headers": headers, "rows": rows, "count": len(rows)}
 
 
-# ── Step 2: Direct write_csv call — no Claude ──────────────────────────────────
+# Step 2: Write CSV without Claude (deterministic operation)
 async def write_csv_direct(session: ClientSession, data: dict, filename: str):
     """
     Directly call write_csv with structured data. No Claude involved.

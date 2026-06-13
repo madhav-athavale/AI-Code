@@ -27,8 +27,8 @@ load_dotenv()
 # ── MCP Server ─────────────────────────────────────────────────────────────────
 app = Server("calculator-server")
 
-# ── MySQL config — update these ────────────────────────────────────────────────
-DB_CONFIG = {
+# TODO: Remove hardcoded credentials (lines 31-37) - using .env below instead
+DB_CONFIG_OLD = {
     "host" : "localhost",
     "port" : 3306,
     "user" : "root",
@@ -36,7 +36,6 @@ DB_CONFIG = {
     "db": "northwind",
 }
 
-# ── Alpha Vantage config ───────────────────────────────────────────────────────
 AV_API_KEY = os.getenv("ALPHAVANTAGE_API_KEY")
 
 DB_CONFIG = {
@@ -198,7 +197,7 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         raise ValueError(f"Unknown tool: {name}")
 
 
-# ── SSE transport ──────────────────────────────────────────────────────────────
+# SSE transport: enables remote client connections over HTTP
 sse = SseServerTransport("/messages/")
 
 async def handle_sse(request: Request):

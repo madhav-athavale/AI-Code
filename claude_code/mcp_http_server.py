@@ -70,6 +70,7 @@ async def price(a: str) -> str:
     if not p:
         return json.dumps({"error": f"Could not get price for {a}", "raw": data})
 
+    # Return structured JSON for easy parsing
     return json.dumps({
         "ticker":     a,
         "price":      round(float(p), 2),
@@ -78,7 +79,7 @@ async def price(a: str) -> str:
         "low":        round(float(quote.get("04. low",  0)), 2),
         "volume":     quote.get("06. volume", ""),
         "change":     quote.get("09. change", ""),
-        "change_pct": quote.get("10. change percent", ""),
+        "change_pct": query.get("10. change percent", ""),
     })
 
 
@@ -94,6 +95,7 @@ async def query_db(query: str) -> str:
     if not rows:
         return json.dumps({"columns": [], "rows": [], "row_count": 0})
 
+    # Return structured data for easy downstream processing
     columns   = list(rows[0].keys())
     data_rows = [[str(v) for v in row.values()] for row in rows]
     return json.dumps({"columns": columns, "rows": data_rows, "row_count": len(data_rows)})
