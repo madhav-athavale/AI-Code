@@ -1,0 +1,1 @@
+aws lambda invoke --function-name CurrentTemp --cli-binary-format raw-in-base64-out --log-type Tail --payload '{"latitude" : "40.71427",  "longitude" : "-74.00597"}' response.json | jq -r '.LogResult' | base64 --decode

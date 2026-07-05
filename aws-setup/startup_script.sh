@@ -65,16 +65,16 @@ EOF
 
 # ─── Download requirements.txt from S3 ───────────────────────
 echo "Downloading requirements.txt from S3..."
-aws s3 cp s3://mva-python-code/requirements.txt /home/ec2-user/requirements.txt \
+aws s3 cp s3://mva-python-code-east/requirements.txt /home/ec2-user/requirements-complete.txt \
   --region us-east-1
 
 # Strip version numbers and fix common issues
-sed -i 's/==[0-9].*//' /home/ec2-user/requirements.txt   # remove ==x.x.x
-sed -i 's/>=[0-9].*//' /home/ec2-user/requirements.txt   # remove >=x.x.x
-sed -i 's/<=[0-9].*//' /home/ec2-user/requirements.txt   # remove <=x.x.x
+sed -i 's/==[0-9].*//' /home/ec2-user/requirements-complete.txt   # remove ==x.x.x
+sed -i 's/>=[0-9].*//' /home/ec2-user/requirements-complete.txt   # remove >=x.x.x
+sed -i 's/<=[0-9].*//' /home/ec2-user/requirements-complete.txt   # remove <=x.x.x
 
 echo "requirements.txt downloaded and cleaned"
-cat /home/ec2-user/requirements.txt
+cat /home/ec2-user/requirements-complete.txt
 
 # ─── Install Python packages ──────────────────────────────────
 echo "Installing Python packages..."
@@ -84,7 +84,7 @@ source /home/ec2-user/miniconda3/etc/profile.d/conda.sh
 conda activate py313
 
 # Install from requirements.txt
-pip install --prefer-binary -r /home/ec2-user/requirements.txt
+pip install --prefer-binary -r /home/ec2-user/requirements-complete.txt
 
 # Install essential packages not in requirements.txt
 pip install --prefer-binary \
