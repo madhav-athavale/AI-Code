@@ -5823,15 +5823,7 @@ print(response.content[0].text)
 Stop instance when not using it — important for cost:
 
 bash
-aws sagemaker stop-notebook-instance \
-  --notebook-instance-name madhav-analysis \
-  --region us-east-1
-Start it again:
-
-bash
-aws sagemaker start-notebook-instance \
-  --notebook-instance-name madhav-analysis \
-  --region us-east-1
+Was-sagemaker
 Cost estimate for your usage:
 
 Scenario	Cost

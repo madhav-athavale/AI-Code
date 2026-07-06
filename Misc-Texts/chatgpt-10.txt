@@ -1,0 +1,729 @@
+
+
+The error is no longer about your code or layer. Lambda is running, but the IAM role used by the Lambda function does not have permission to read the secret.
+
+The key part is:
+
+User: arn:aws:sts::806575638863:assumed-role/LambdaExecutionRole/stock_quote_lambda
+is not authorized to perform:
+secretsmanager:GetSecretValue
+This means the Lambda execution role LambdaExecutionRole needs a policy that allows:
+
+{
+  "Effect": "Allow",
+  "Action": "secretsmanager:GetSecretValue",
+  "Resource": "..."
+}
+Find the secret ARN
+From your Mac:
+
+aws secretsmanager describe-secret \
+  --secret-id ALPHA_VANTAGE
+This will return something like:
+
+{
+  "ARN": "arn:aws:secretsmanager:us-east-1:806575638863:secret:ALPHA_VANTAGE-AbCdEf"
+}
+Add a policy to the Lambda role
+Create secrets-policy.json:
+
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetSecretValue"
+      ],
+      "Resource": "arn:aws:secretsmanager:us-east-1:806575638863:secret:ALPHA_VANTAGE*"
+    }
+  ]
+}
+Attach it:
+
+aws iam put-role-policy \
+  --role-name LambdaExecutionRole \
+  --policy-name ReadAlphaVantageSecret \
+  --policy-document file://secrets-policy.json
+Quick test (broader permissions)
+For troubleshooting, you can temporarily allow all secrets:
+
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "secretsmanager:GetSecretValue",
+      "Resource": "*"
+    }
+  ]
+}
+If that works, tighten it to the specific secret ARN afterward.
+
+If the secret uses a customer-managed KMS key
+You may also need:
+
+{
+  "Effect": "Allow",
+  "Action": "kms:Decrypt",
+  "Resource": "*"
+}
+Most secrets use the default AWS-managed key and do not need this.
+
+Verify the role your Lambda uses
+Run:
+
+aws lambda get-function-configuration \
+  --function-name stock_quote_lambda \
+  --query Role
+or for your function name if it's different.
+
+The role returned must be the one to which you attach the Secrets Manager policy.
+
+After attaching the policy, wait 15–30 seconds and invoke the Lambda again. The AccessDeniedException should disappear.
+
+
+error while putting role policy
+
+Can you paste the exact error message from the put-role-policy command?
+
+A few common causes:
+
+1. Wrong role name
+The role in your earlier Lambda configuration was:
+
+arn:aws:iam::806575638863:role/service-role/CurrentTemp-role-rtf8jhgd
+But the error message mentioned:
+
+LambdaExecutionRole
+These may be different roles.
+
+List the role actually attached to your function:
+
+aws lambda get-function-configuration \
+  --function-name stock_quote_lambda \
+  --query Role \
+  --output text
+Then extract the role name from the ARN.
+
+2. Verify the role exists
+aws iam get-role --role-name LambdaExecutionRole
+or
+
+aws iam list-roles | grep Lambda
+3. Your IAM user lacks permission to modify roles
+A common error looks like:
+
+AccessDenied: User is not authorized to perform iam:PutRolePolicy
+In that case, your AWS user can invoke Lambda and read Secrets Manager, but cannot change IAM policies.
+
+4. JSON file format issue
+Validate the policy file:
+
+cat secrets-policy.json
+It should be valid JSON with double quotes, not smart quotes.
+
+Alternative: Attach an AWS-managed policy
+Instead of an inline policy, you can create and attach a policy:
+
+aws iam attach-role-policy \
+  --role-name LambdaExecutionRole \
+  --policy-arn arn:aws:iam::aws:policy/SecretsManagerReadWrite
+(This is broader than necessary but useful for testing.)
+
+Please paste:
+
+The output of:
+
+aws lambda get-function-configuration \
+  --function-name stock_quote_lambda \
+  --query Role \
+  --output text
+The full error from put-role-policy.
+
+That will identify the exact issue quickly.
+
+
+aws: [ERROR]: An error occurred (ParamValidation): Parameter validation failed:
+Invalid length for parameter PolicyDocument, value: 0, valid min length: 1
+(nlp_python_env) madhavathavale@Mac aws-setup % 
+
+That error means AWS CLI did not receive any policy document at all.
+
+Invalid length for parameter PolicyDocument, value: 0, valid min length: 1
+This usually happens when:
+
+Cause 1: The file is empty
+Check:
+
+cat secrets-policy.json
+or
+
+ls -l secrets-policy.json
+If the size is 0 bytes, recreate the file.
+
+Cause 2: Wrong filename or path
+If you ran:
+
+aws iam put-role-policy \
+  --role-name LambdaExecutionRole \
+  --policy-name ReadAlphaVantageSecret \
+  --policy-document file://secrets-policy.json
+make sure you're in the directory containing secrets-policy.json.
+
+Verify:
+
+pwd
+ls -l secrets-policy.json
+Cause 3: File contents were not saved
+Create the file again:
+
+cat > secrets-policy.json << 'EOF'
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "secretsmanager:GetSecretValue",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+Verify:
+
+cat secrets-policy.json
+Then run:
+
+aws iam put-role-policy \
+  --role-name LambdaExecutionRole \
+  --policy-name ReadAlphaVantageSecret \
+  --policy-document file://secrets-policy.json
+Before you do that, verify the role name
+The role in the error was:
+
+LambdaExecutionRole
+but your earlier Lambda configuration showed a role similar to:
+
+CurrentTemp-role-rtf8jhgd
+Run:
+
+aws lambda get-function-configuration \
+  --function-name stock_quote_lambda \
+  --query Role \
+  --output text
+and use the exact role name from that ARN.
+
+If you paste:
+
+The exact put-role-policy command you ran
+
+Output of ls -l secrets-policy.json
+
+Output of cat secrets-policy.json
+
+I can identify the issue immediately.
+
+
+where is data wrangler in aws sagemaker
+
+AWS has changed the SageMaker experience over time, and this is what often causes confusion.
+
+If you are using SageMaker Studio Classic
+Open Amazon SageMaker Console
+
+Launch Studio Classic.
+
+In the left navigation:
+
+Home
+
+Data
+
+Data Wrangler
+
+Or create a new flow:
+
+File → New → Data Wrangler Flow
+AWS documentation shows Data Wrangler under Data → Data Wrangler inside Studio Classic. 
+
+If you are using the newer SageMaker Unified Studio
+Data Wrangler is no longer a separate top-level service. AWS has integrated its capabilities into the broader SageMaker data preparation experience and SageMaker Canvas. AWS describes Data Wrangler as "now in SageMaker Canvas." 
+
+If you don't see Data Wrangler at all
+Common reasons:
+
+You're in the new SageMaker experience rather than Studio Classic.
+
+Your SageMaker domain/user profile doesn't have permissions.
+
+Studio Classic has not been launched for your account.
+
+The Data Wrangler application has not been provisioned yet. 
+
+Quick check
+Can you tell me which AWS screen you're on?
+
+SageMaker AI → Studio
+
+SageMaker Unified Studio
+
+SageMaker Canvas
+
+A screenshot of the left navigation panel
+
+Then I can tell you exactly where Data Wrangler appears in your current AWS UI.
+
+
+Screenshot 2026-06-21 at 10.45.37 AM.png
+This is the screenshot
+
+From your screenshot, you're in the new SageMaker Studio / Unified Studio interface, not Studio Classic.
+
+That's why you don't see Data Wrangler in the left menu.
+
+AWS has integrated Data Wrangler into SageMaker Canvas and moved away from exposing it as a separate top-level item in the new experience. Data Wrangler is still available in Studio Classic. 
+
+What you can do
+Option 1: Launch Studio Classic (recommended if following older tutorials)
+Go to the AWS SageMaker Console.
+
+Look for Domains or Studio Classic.
+
+Launch a Studio Classic application for your user profile.
+
+In Studio Classic:
+
+Home → Data → Data Wrangler
+
+or File → New → Data Wrangler Flow. 
+
+Option 2: Use the new Data Preparation experience
+In the interface you showed:
+
+Open Assets
+
+Look for datasets or data preparation workflows
+
+AWS has been moving Data Wrangler functionality into the newer data preparation tools and SageMaker Canvas. 
+
+Quick question
+When you click Assets, do you see items such as:
+
+Data
+
+Datasets
+
+Data preparation
+
+Flows
+
+or anything similar?
+
+A screenshot of the Assets section would help me tell you exactly where the Data Wrangler functionality is located in your specific SageMaker setup.
+
+
+Yes
+
+Great. Since you can see Assets, you're very close.
+
+In the newer SageMaker Studio UI, try:
+
+Click Assets.
+
+Look for one of these:
+
+Data
+
+Datasets
+
+Data preparation
+
+Flows
+
+If you see Data preparation or Flows, that's where the Data Wrangler functionality has been integrated in the newer Studio experience.
+
+If you don't see Data Preparation or Flows, then your SageMaker domain may not have the Data Wrangler application enabled. In that case, the easiest approach is:
+
+Open the AWS SageMaker console.
+
+Go to Domains.
+
+Select your SageMaker domain.
+
+Check whether Studio Classic is available for your user profile.
+
+Launch Studio Classic, where Data Wrangler appears directly under the Data section.
+
+Could you send a screenshot of what appears after expanding Assets? That will tell me whether:
+
+Data Wrangler is available in your current Studio,
+
+it's hidden under Data Preparation/Flows,
+
+or you need to launch Studio Classic.
+
+
+
+
+
+
+I have only sagemaker unified studio option
+
+If you only have SageMaker Unified Studio, then you likely cannot access the classic Data Wrangler UI.
+
+AWS documentation states that:
+
+Data Wrangler was originally a feature of SageMaker Studio Classic. 
+
+New accounts are generally onboarded to SageMaker Unified Studio, and Studio Classic is no longer available for new onboarding. 
+
+The new Studio experience does not support the classic Data Wrangler UI. AWS recommends using Data Wrangler functionality through SageMaker Canvas instead. 
+
+So if your account only offers Unified Studio, that explains why you cannot find Home → Data → Data Wrangler as shown in many tutorials.
+
+What to do instead
+Look in Unified Studio for:
+
+Assets → Data
+
+Assets → Datasets
+
+Data preparation
+
+Canvas (if enabled by your administrator)
+
+AWS has moved Data Wrangler capabilities into the newer data preparation experience and SageMaker Canvas. 
+
+If you're following a course
+Many SageMaker courses recorded before 2025 assume:
+
+Studio Classic
+→ Data
+→ Data Wrangler
+That navigation no longer exists in Unified Studio. 
+
+Next step
+Click Assets and tell me the exact items you see underneath it (or send a screenshot of the expanded Assets menu). I can then tell you the Unified Studio equivalent of the Data Wrangler workflow you're trying to perform.
+
+
+
+
+
+
+how to save output of the aws etl job
+
+How you save the output depends on which AWS ETL service you're using.
+
+If you're using an AWS Glue ETL Job (most common)
+In your Glue script, write the transformed DataFrame to S3.
+
+Spark DataFrame
+output_path = "s3://my-output-bucket/stock-data/"
+
+df.write \
+    .mode("overwrite") \
+    .parquet(output_path)
+Or as CSV:
+
+df.write \
+    .mode("overwrite") \
+    .option("header", "true") \
+    .csv(output_path)
+If you're using a Glue DynamicFrame
+glueContext.write_dynamic_frame.from_options(
+    frame=output_dyf,
+    connection_type="s3",
+    connection_options={
+        "path": "s3://my-output-bucket/output/"
+    },
+    format="csv"
+)
+Common Output Formats
+Format	Advantages
+Parquet	Best for analytics, Athena, Redshift
+CSV	Human-readable
+JSON	API-friendly
+ORC	Large-scale analytics
+Save to a Glue Catalog Table
+Instead of only writing files:
+
+glueContext.write_dynamic_frame.from_catalog(
+    frame=output_dyf,
+    database="my_database",
+    table_name="output_table"
+)
+This creates/updates data that can be queried via Athena.
+
+Verify the output
+After the job runs:
+
+aws s3 ls s3://my-output-bucket/output/ --recursive
+or
+
+aws s3 cp s3://my-output-bucket/output/part-00000.csv .
+If you're using Glue Studio
+In the visual ETL editor:
+
+Add a Target node.
+
+Select Amazon S3.
+
+Specify:
+
+S3 location
+
+Format (CSV, Parquet, JSON)
+
+Connect the transformation node to the target.
+
+Save and run the job.
+
+If you're following an AWS course that uses Data Wrangler → Glue Job, tell me:
+
+Are you using Glue Studio, Glue ETL script, or SageMaker Data Preparation Flow?
+
+What type of output do you want (CSV, Parquet, Athena table, database)?
+
+I can then give the exact steps for that workflow.
+
+
+
+
+
+
+I dont see a place to specify output csv in the GUI
+
+If you're using the visual AWS Glue ETL editor and you don't see a place to choose CSV output, it's usually because you haven't added or selected a Target node yet.
+
+In Glue Studio Visual ETL:
+
+Select the last transform node.
+
+Click Target at the top of the canvas.
+
+Choose Amazon S3 as the target.
+
+Click the new S3 target node.
+
+In the right-hand properties panel, look for:
+
+Format
+
+S3 Target Location
+
+The Format dropdown should allow:
+
+CSV
+JSON
+Parquet
+ORC
+Avro
+...
+and you can select CSV there. 
+
+If you are writing to a Glue Data Catalog table instead of an S3 target, you may not see a CSV option because the format is determined by the underlying table definition rather than a simple output-format selector. 
+
+Quick diagnostic
+Can you tell me which of these you're using?
+
+AWS Glue Studio → Visual ETL
+
+SageMaker Unified Studio ETL job
+
+Data preparation flow
+
+Glue notebook/script job
+
+Also, a screenshot of the canvas showing your source/transform/target nodes would help. The UI differs significantly depending on which editor you're in, and I can point to the exact place where the output format is configured.
+
+
+
+
+
+
+Screenshot 2026-06-21 at 5.40.03 PM.png
+Is this what you are lloking for
+
+Yes, this is exactly what I was looking for.
+
+Your screenshot shows that the output is already configured as CSV and the destination is:
+
+s3://sagemaker-mva/glue/scripts/
+So the ETL job will write CSV files to that S3 location when it runs. 
+
+What happens after the job runs
+Glue typically writes one or more files into the target prefix, for example:
+
+s3://sagemaker-mva/glue/scripts/
+    part-00000-xxxx.csv
+    part-00001-xxxx.csv
+    _SUCCESS
+The exact number of CSV files depends on partitioning and Spark execution. 
+
+How to find the output
+After the job completes:
+
+aws s3 ls s3://sagemaker-mva/glue/scripts/ --recursive
+Or browse the bucket in the S3 Console.
+
+One thing to check
+Your target location is:
+
+s3://sagemaker-mva/glue/scripts/
+The folder name scripts is often used to store Glue scripts themselves. It's usually better to write output data to a separate prefix such as:
+
+s3://sagemaker-mva/glue/output/
+or
+
+s3://sagemaker-mva/output/stock_data/
+to avoid mixing ETL scripts and data files.
+
+If you ran the job and don't see any CSV files
+Check:
+
+Job status = Succeeded
+
+CloudWatch logs for errors
+
+S3 bucket permissions
+
+Whether the files were written to a partitioned subfolder
+
+Run:
+
+aws s3 ls s3://sagemaker-mva/glue/scripts/ --recursive
+and tell me what it returns. If it's empty, we'll look at the Glue job run status and logs next.
+
+
+
+
+
+
+I found the file. But how do I specify the file name
+
+With AWS Glue Visual ETL, you generally cannot specify the exact output filename in the GUI.
+
+Glue uses Apache Spark underneath, and Spark writes files with names such as:
+
+part-00000-xxxx.csv
+part-00001-xxxx.csv
+instead of a user-defined filename. 
+
+What you can control in the GUI
+You can specify:
+
+s3://sagemaker-mva/output/
+but not:
+
+s3://sagemaker-mva/output/stocks.csv
+Even if you put a filename in the path, Spark typically creates a folder and writes a part-* file inside it. 
+
+Your options
+Option 1 (Recommended): Use the generated filename
+After the job runs, your file will be something like:
+
+s3://sagemaker-mva/output/part-00000-abc123.csv
+This is the standard Glue/Spark approach. 
+
+Option 2: Rename the file after the Glue job
+A common pattern is:
+
+Glue writes to S3.
+
+A Lambda function runs.
+
+Lambda copies:
+
+part-00000-abc123.csv
+to:
+
+stock_quotes.csv
+Lambda deletes the original file.
+
+This is a common workaround because Spark does not natively support fixed output filenames. 
+
+Option 3: Use the new Glue Studio "single file output"
+AWS announced support for controlling the number of output files, including writing a single output file, in Glue Studio. However, this controls the number of files, not necessarily the exact filename. 
+
+For your learning project
+Since you're just getting started with Glue, I would:
+
+Write to:
+
+s3://sagemaker-mva/output/
+Let Glue create the part-*.csv file.
+
+Download or query the file from S3.
+
+Only add a Lambda-based rename step if you truly need a fixed name such as:
+
+stock_quotes_20260621.csv
+One question: do you need exactly one CSV file with a fixed name, or do you just want an easy way to find the latest output file? The solution is slightly different depending on your goal.
+
+
+
+
+
+
+How to prodcue a single file output using aws GLUE. I dont have the option yo create as single file. BTW, what does autogenerate file means?
+
+Based on your screenshot, you're using an S3 target node in AWS Glue Studio Visual ETL.
+
+What does "Autogenerate files" mean?
+When Autogenerate files is selected, Glue/Spark decides how many output files to create based on the data size and cluster parallelism. You might get:
+
+part-00000-....
+part-00001-....
+part-00002-....
+_SUCCESS
+This is usually the fastest option because Spark writes data in parallel. 
+
+How to produce a single output file
+AWS added support in Glue Studio to choose the number of output files, including 1 single file, for S3 targets. 
+
+However, if you don't see that option, one of these is true:
+
+Your Glue Studio UI version hasn't received the new feature yet.
+
+The feature isn't available in the specific workflow type you're using.
+
+You're using an older visual job configuration. 
+
+Workaround if the GUI doesn't show "Single file"
+Open the generated Glue script and add:
+
+df = df.coalesce(1)
+or
+
+df = df.repartition(1)
+before the write operation. This forces Spark to write a single data partition, which typically results in a single CSV output file. 
+
+Check whether the feature is available in your UI
+Scroll further down in the Data target properties panel and look for something like:
+
+Number of output files
+or
+
+File output options
+If you see it, set:
+
+1
+and Glue will generate a single output file. 
+
+For your learning project
+Since your output is probably not huge, using:
+
+coalesce(1)
+is perfectly reasonable. For very large datasets, forcing a single file can become slow because all data must be gathered into one partition before writing. 
+
+If you'd like, I can show you exactly where to edit the autogenerated Glue script to add coalesce(1) in your current Visual ETL job.
+
+
+You’ve reached the Free limit for chats with attachments
+Upgrade now or wait until 10:29 PM to keep using files, or chat now without files.
+
+New chat
+
+Claim free offer
+
