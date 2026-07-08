@@ -15,3 +15,6 @@ aws iam attach-role-policy \
 aws iam attach-role-policy \
   --role-name SageMakerRole \
   --policy-arn arn:aws:iam::aws:policy/SecretsManagerReadWrite
+
+# aws security token service
+#aws sts get-caller-identity --query Account --output text

@@ -7,7 +7,7 @@ aws rds create-db-instance \
     --engine mysql \
     --engine-version 8.0 \
     --master-username admin \
-    --master-user-password 'ChangeMe123!' \
+    --master-user-password 'Pma94029#' \
     --allocated-storage 20 \
     --storage-type gp3 \
     --backup-retention-period 1 \
