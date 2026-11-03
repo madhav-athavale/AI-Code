@@ -1,0 +1,9 @@
+# Check if evaluator model is enabled
+aws bedrock get-foundation-model \
+  --model-identifier amazon.nova-pro-v1:0\
+  --region us-east-1
+
+# Check if generator model is enabled  
+aws bedrock get-foundation-model \
+  --model-identifier anthropic.claude-haiku-4-5-20251001-v1:0 \
+  --region us-east-1

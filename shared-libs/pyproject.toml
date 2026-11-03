@@ -1,0 +1,10 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aws_utils"
+version = "1.0.0"
+description = "Shared AWS utility functions"
+requires-python = ">=3.9"
+dependencies = ["boto3"]

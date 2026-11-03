@@ -1,0 +1,8 @@
+pyproject.toml
+aws_utils/__init__.py
+aws_utils/secrets.py
+aws_utils.egg-info/PKG-INFO
+aws_utils.egg-info/SOURCES.txt
+aws_utils.egg-info/dependency_links.txt
+aws_utils.egg-info/requires.txt
+aws_utils.egg-info/top_level.txt

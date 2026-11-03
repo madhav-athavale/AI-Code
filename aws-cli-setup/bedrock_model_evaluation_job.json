@@ -1,0 +1,39 @@
+{
+  "jobName": "bedrock-eval-job-2",
+  "roleArn": "arn:aws:iam::806575638863:role/BedrockEvalRole",
+ 
+ "inferenceConfig": {
+  "models": [
+    {
+      "bedrockModel": {
+        "modelIdentifier": "amazon.nova-pro-v1:0",
+        "inferenceParams": "{\"inferenceConfig\":{\"maxTokens\": 512, \"temperature\": 0.7, \"topP\": 0.9}}"
+      }
+    }
+  ]
+},
+  "outputDataConfig": {
+    "s3Uri": "s3://madhav-bedrock/eval-output/"
+  },
+  "evaluationConfig": {
+    "automated": {
+      "datasetMetricConfigs": [
+        {
+          "taskType": "General",
+          "dataset": {
+            "name": "my-eval-dataset",
+            "datasetLocation": {
+              "s3Uri": "s3://madhav-bedrock/eval_input/bedrock_eval_dataset.jsonl"
+            }
+          },
+          "metricNames": ["Builtin.Correctness", "Builtin.Completeness", "Builtin.Helpfulness"]
+        }
+      ],
+      "evaluatorModelConfig": {
+    "bedrockEvaluatorModels": [
+      { "modelIdentifier": "us.anthropic.claude-sonnet-4-5-20250929-v1:0" }
+    ]
+  }
+    }
+  }
+}

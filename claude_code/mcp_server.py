@@ -73,8 +73,7 @@ async def list_tools() -> list[Tool]:
 
 @app.call_tool()
 async def call_tool(name: str, arguments: dict) -> list[TextContent]:
-    """Handle tool calls."""
-    
+    """Route tool calls to their implementations."""
 
     if name == "add":
         a = arguments["a"]
@@ -90,6 +89,7 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
     elif name == "qu":
         query = arguments["query"]
 
+        # TODO: Move credentials to .env
         conn = await aiomysql.connect(
             host="localhost",
             port=3306,
@@ -105,20 +105,19 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         conn.close()
         if not rows:
             return [TextContent(type="text", text="Query returned no results.")]
-    
-    # Format rows as readable text for Claude
+
         result = "\n".join(str(row) for row in rows)
         return [TextContent(type="text", text=f"Query results:\n{result}")]
 
 
     elif name == "price":
-       
+
         symbol = arguments["a"]
         url = "https://www.alphavantage.co/query"
         params = {
             "function": "GLOBAL_QUOTE",
             "symbol": symbol,
-            "apikey": "A6QAMSHO0IPIOIR0"   # hardcode for now to test
+            "apikey": "A6QAMSHO0IPIOIR0"   # TODO: Move to .env
         }
 
         async with httpx.AsyncClient() as client:

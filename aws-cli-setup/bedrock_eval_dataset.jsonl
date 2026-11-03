@@ -1,0 +1,11 @@
+{"prompt": "What is the capital of France?", "referenceResponse": "Paris"}
+{"prompt": "What is 2 + 2?", "referenceResponse": "4"}
+{"prompt": "Who wrote Hamlet?", "referenceResponse": "William Shakespeare"}
+{"prompt": "What causes lightning?", "referenceResponse": "Lightning is caused by electrical discharge between clouds and the ground."}
+{"prompt": "How does photosynthesis work?", "referenceResponse": "Plants convert sunlight, water and CO2 into glucose and oxygen."}
+{"prompt": "Summarize: The Amazon rainforest covers 5.5 million sq km and produces 20% of the world's oxygen.", "referenceResponse": "The Amazon rainforest is a vast ecosystem crucial for global oxygen production."}
+{"prompt": "What is machine learning?", "referenceResponse": "A subset of AI where systems learn from data.", "category": "technology"}
+{"prompt": "What is inflation?", "referenceResponse": "A general increase in prices over time.", "category": "economics"}
+{"prompt": "What is cloud computing?", "referenceResponse": "Delivery of computing services over the internet."}
+{"prompt": "What is machine learning?", "referenceResponse": "A subset of AI where systems learn from data."}
+{"prompt": "What is an API?", "referenceResponse": "A set of rules that allows programs to communicate with each other."}

@@ -1,0 +1,19 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Sid": "AllowBedrockToAssumeRole",
+    "Effect": "Allow",
+    "Principal": {
+      "Service": "bedrock.amazonaws.com"
+    },
+    "Action": "sts:AssumeRole",
+    "Condition": {
+      "StringEquals": {
+        "aws:SourceAccount": "806575638863"
+      },
+      "ArnEquals": {
+        "aws:SourceArn": "arn:aws:bedrock:us-east-1:806575638863:evaluation-job/*"
+      }
+    }
+  }]
+}

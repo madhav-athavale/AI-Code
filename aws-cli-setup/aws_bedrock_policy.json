@@ -1,0 +1,21 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Sid": "AllowBedrockInvoke",
+    "Effect": "Allow",
+    "Action": [
+      "bedrock:InvokeModel",
+      "bedrock:InvokeModelWithResponseStream",
+      "bedrock:CreateModelInvocationJob",
+      "bedrock:StopModelInvocationJob",
+      "bedrock:GetProvisionedModelThroughput",
+      "bedrock:GetInferenceProfile",
+      "bedrock:ListInferenceProfiles"
+    ],
+    "Resource": [
+      "arn:aws:bedrock:*::foundation-model/*",
+      "arn:aws:bedrock:*:806575638863:inference-profile/*",
+      "arn:aws:bedrock:*:806575638863:provisioned-model/*"
+    ]
+  }]
+}

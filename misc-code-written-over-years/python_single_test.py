@@ -1,0 +1,7 @@
+python -m unittest test_module.TestClass.test_method
+python -m unittest test_module.TestClass.test_method -v
+
+python -m unittest TestCasesForLongestSubstring.TestLongestSubstring.test_example1_abcabcbb
+python -m unittest TestCasesForLongestSubstring.TestLongestSubstring.test_example1_abcabcbb
+
+lengthOfLongestSubstring
